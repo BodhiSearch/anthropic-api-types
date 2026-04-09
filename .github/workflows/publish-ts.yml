@@ -29,17 +29,16 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          # Node 22+ ships an npm new enough (>= 11.5.1) for OIDC trusted publishing.
-          node-version: "22"
+          # Node 24 ships npm >= 11.11.0, which is required for OIDC trusted
+          # publishing (needs >= 11.5.1). We can't use Node 22 here because the
+          # bundled npm 10.9.7 in the runner image has a broken module tree
+          # (missing promise-retry) and even `npm install -g npm@latest --force`
+          # fails to recover from it. See actions/runner-images#13883.
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Ensure npm supports trusted publishing
-        # --force is required because npm self-upgrading via `npm install -g npm`
-        # can corrupt its own dependency tree mid-install (MODULE_NOT_FOUND for
-        # promise-retry). Node 22 ships npm 10.x, but OIDC needs >= 11.5.1.
-        run: |
-          npm install -g npm@latest --force
-          npm --version
+      - name: Confirm npm version
+        run: npm --version
 
       - name: Extract version from tag
         id: version
