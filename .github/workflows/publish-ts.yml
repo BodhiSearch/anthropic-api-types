@@ -9,9 +9,11 @@ concurrency:
   group: publish-ts-${{ github.ref }}
   cancel-in-progress: false
 
+# id-token: write enables npm OIDC trusted publishing (no NPM_TOKEN required).
+# The package on npmjs.com must be configured with this repo + workflow as a
+# trusted publisher (one-time, after the first manual publish).
 permissions:
   contents: write
-  packages: write
   id-token: write
 
 jobs:
@@ -27,8 +29,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Node 22+ ships an npm new enough (>= 11.5.1) for OIDC trusted publishing.
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Extract version from tag
         id: version
@@ -63,23 +71,24 @@ jobs:
             TypeScript type definitions for the Anthropic API v${{ steps.version.outputs.version }}
 
             ```
-            npm install @anthropic-types/sdk-types@${{ steps.version.outputs.version }}
+            npm install @bodhiapp/anthropic-api-types@${{ steps.version.outputs.version }}
             ```
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to npm
+      - name: Publish to npm (OIDC trusted publishing)
         working-directory: ./typescript
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # access + provenance come from publishConfig in package.json.
+        # --provenance kept explicit because automatic provenance has been
+        # observed to be flaky for scoped packages on first OIDC exchange.
+        run: npm publish --provenance
 
       - name: Verify published package
         run: |
           sleep 10
-          PUBLISHED=$(npm view @anthropic-types/sdk-types version 2>/dev/null || echo "not found")
+          PUBLISHED=$(npm view @bodhiapp/anthropic-api-types version 2>/dev/null || echo "not found")
           echo "Published version: $PUBLISHED"
           if [ "$PUBLISHED" = "not found" ]; then
             echo "Warning: Package not yet visible on npm (may take a moment)"

@@ -1,5 +1,5 @@
 {
-  "name": "@anthropic-types/sdk-types",
+  "name": "@bodhiapp/anthropic-api-types",
   "version": "0.1.0",
   "description": "TypeScript type definitions for the Anthropic API (messages, models endpoints)",
   "main": "dist/index.js",
@@ -14,6 +14,15 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BodhiSearch/anthropic-types.git",
+    "directory": "typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "clean": "rm -rf dist src/types src/openapi-typescript",
     "generate": "npm run generate:openapi-typescript && npm run generate:hey-api",

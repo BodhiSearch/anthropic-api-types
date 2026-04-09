@@ -1,5 +1,5 @@
 [package]
-name = "anthropic-api"
+name = "anthropic-api-types"
 version = "0.1.0"
 edition = "2021"
 description = "Rust type definitions for the Anthropic API (messages, models endpoints)"

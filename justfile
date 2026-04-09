@@ -90,7 +90,7 @@ release-ts *flags:
   done
   echo "Preparing TypeScript release..."
   node scripts/git-check-sync.js
-  CURRENT=$(node scripts/get-npm-version.js @anthropic-types/sdk-types)
+  CURRENT=$(node scripts/get-npm-version.js @bodhiapp/anthropic-api-types)
   NEXT=$(node scripts/increment-version.js "$CURRENT")
   echo "Current npm version: $CURRENT"
   echo "Next version:        $NEXT"
@@ -118,7 +118,7 @@ release-rust *flags:
   done
   echo "Preparing Rust release..."
   node scripts/git-check-sync.js
-  CURRENT=$(node scripts/get-crate-version.js anthropic-api)
+  CURRENT=$(node scripts/get-crate-version.js anthropic-api-types)
   NEXT=$(node scripts/increment-version.js "$CURRENT")
   echo "Current crates.io version: $CURRENT"
   echo "Next version:              $NEXT"
