@@ -1,0 +1,67 @@
+name: Sync Anthropic Types
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-anthropic-types
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Install quicktype
+        run: npm install -g quicktype
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync
+        run: just sync --force
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet generated/ typescript/ rust/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --stat generated/ typescript/ rust/
+          fi
+
+      - name: Commit changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add generated/ typescript/ rust/
+          git commit -m "chore: sync anthropic types from upstream spec"
+          git push origin main
+
+      - name: Create release tags
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          CONFIRM: "y"
+        run: just release -y

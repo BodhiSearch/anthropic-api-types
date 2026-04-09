@@ -1,0 +1,38 @@
+{
+  "name": "@anthropic-types/sdk-types",
+  "version": "0.1.0",
+  "description": "TypeScript type definitions for the Anthropic API (messages, models endpoints)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist src/types src/openapi-typescript",
+    "generate": "npm run generate:openapi-typescript && npm run generate:hey-api",
+    "generate:openapi-typescript": "openapi-typescript ../generated/filtered-openapi.json -o src/openapi-typescript/openapi-schema.ts",
+    "generate:hey-api": "openapi-ts",
+    "build": "npm run generate && npm run bundle",
+    "bundle": "tsc"
+  },
+  "keywords": [
+    "anthropic",
+    "claude",
+    "types",
+    "typescript",
+    "openapi"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.64.15",
+    "openapi-typescript": "^7.6.1",
+    "typescript": "^5.7.0"
+  }
+}

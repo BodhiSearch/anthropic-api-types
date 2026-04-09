@@ -1,0 +1,86 @@
+name: Publish TypeScript Types
+
+on:
+  push:
+    tags:
+      - "release-ts/v*"
+
+concurrency:
+  group: publish-ts-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/release-ts/v}
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing TypeScript types v$TAG_VERSION"
+
+      - name: Set package version
+        working-directory: ./typescript
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Install dependencies
+        working-directory: ./typescript
+        run: npm install
+
+      - name: Build package
+        working-directory: ./typescript
+        run: npm run build
+
+      - name: Create package tarball
+        working-directory: ./typescript
+        run: npm pack
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: typescript/*.tgz
+          name: "TypeScript types v${{ steps.version.outputs.version }}"
+          body: |
+            TypeScript type definitions for the Anthropic API v${{ steps.version.outputs.version }}
+
+            ```
+            npm install @anthropic-types/sdk-types@${{ steps.version.outputs.version }}
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        working-directory: ./typescript
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify published package
+        run: |
+          sleep 10
+          PUBLISHED=$(npm view @anthropic-types/sdk-types version 2>/dev/null || echo "not found")
+          echo "Published version: $PUBLISHED"
+          if [ "$PUBLISHED" = "not found" ]; then
+            echo "Warning: Package not yet visible on npm (may take a moment)"
+          fi

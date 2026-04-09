@@ -1,0 +1,13 @@
+{
+  "name": "anthropic-types-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generate TypeScript and Rust types from the Anthropic OpenAPI spec",
+  "type": "module",
+  "devDependencies": {
+    "openapi-typescript": "^7.6.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "yaml": "^2.7.0"
+  }
+}
